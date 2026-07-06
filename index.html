@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sankalp AI - Turning Intent into Action</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+    <!-- Background Elements -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-grid"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="header-logo">
+                <div class="logo-icon">S</div>
+                <div class="logo-text">
+                    <h1>Sankalp AI</h1>
+                    <span class="tagline">Turning Intent into Action</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="api-status-badge" id="rag-status-badge">
+                    <span class="status-dot simulated" style="background-color: var(--text-muted); box-shadow: none;"></span>
+                    <span class="status-text">RAG: Inactive</span>
+                </div>
+                <div class="api-status-badge" id="api-status-badge">
+                    <span class="status-dot simulated"></span>
+                    <span class="status-text">Simulated Mode</span>
+                </div>
+                <button class="icon-btn" id="settings-btn" title="Settings">
+                    <i data-lucide="settings"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="app-main">
+            
+            <!-- VIEW 1: GOAL CAPTURE PANEL -->
+            <section id="goal-capture-view" class="view-panel active">
+                <div class="hero-section">
+                    <span class="badge">Multi-Agent Planner</span>
+                    <h2>What is your ultimate goal?</h2>
+                    <p class="hero-subtitle">Describe what you want to achieve. Our specialized agent team will research, verify, strategize, and build your complete execution roadmap.</p>
+                </div>
+
+                <div class="goal-input-container">
+                    <div class="textarea-wrapper">
+                        <textarea id="goal-input" placeholder="Enter any custom business, technical, career, or academic goal..." maxlength="500"></textarea>
+                        <div class="char-counter"><span id="char-count">0</span>/500</div>
+                    </div>
+
+                    <!-- Interactive Dialog Panel for Greetings and Follow-up Clarifications -->
+                    <div class="conversational-dialog" id="conversational-dialog" style="display: none;">
+                        <div class="dialog-header">
+                            <span class="dialog-agent-badge"><i data-lucide="message-square"></i> Sankalp Dialog Orchestrator</span>
+                        </div>
+                        <div class="dialog-body" id="dialog-body">
+                            <!-- Injected dynamically -->
+                        </div>
+                        <div class="dialog-footer" id="dialog-footer">
+                            <!-- Action buttons injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Presets Inspiration Grid -->
+                    <div class="presets-section">
+                        <h4>Need Inspiration? Select a blueprint:</h4>
+                        <div class="presets-grid">
+                            <div class="preset-card" data-goal="I want to build a startup.">
+                                <div class="preset-icon"><i data-lucide="rocket"></i></div>
+                                <div class="preset-title">Build a Startup</div>
+                            </div>
+                            <div class="preset-card" data-goal="I want to organize a college hackathon.">
+                                <div class="preset-icon"><i data-lucide="users"></i></div>
+                                <div class="preset-title">Organize a Hackathon</div>
+                            </div>
+                            <div class="preset-card" data-goal="I want to learn Python from scratch.">
+                                <div class="preset-icon"><i data-lucide="code-2"></i></div>
+                                <div class="preset-title">Learn Python</div>
+                            </div>
+                            <div class="preset-card" data-goal="I want to switch careers into Product Management.">
+                                <div class="preset-icon"><i data-lucide="briefcase"></i></div>
+                                <div class="preset-title">Switch Careers</div>
+                            </div>
+                            <div class="preset-card" data-goal="I want to write and publish a research paper on AI ethics.">
+                                <div class="preset-icon"><i data-lucide="book-open"></i></div>
+                                <div class="preset-title">Write a Research Paper</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Context & RAG Inputs -->
+                    <div class="context-upload-section">
+                        <h4>Attach Context (Optional RAG Source):</h4>
+                        <div class="upload-flex-container">
+                            <div class="drag-drop-zone" id="drop-zone">
+                                <i data-lucide="upload-cloud"></i>
+                                <span>Drag & drop files or click to upload</span>
+                                <span class="file-specs">TXT, MD, CSV, PDF, DOCX (Max 10MB)</span>
+                                <input type="file" id="file-input" multiple style="display: none;">
+                            </div>
+                            <div class="url-input-zone">
+                                <div class="input-with-button">
+                                    <input type="url" id="url-context-input" placeholder="Add context URL (e.g., https://docs.example.com)...">
+                                    <button class="secondary-btn" id="add-url-btn">Add URL</button>
+                                </div>
+                                <ul class="context-sources-list" id="sources-list"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Category-based Parameters -->
+                    <div class="dynamic-params-container" id="dynamic-params-container" style="display: none;">
+                        <h4 class="params-header"><i data-lucide="sliders-horizontal"></i> Dynamic Goal Context</h4>
+                        <div id="dynamic-params-fields" class="params-grid">
+                            <!-- Injected dynamically based on detected goal domain -->
+                        </div>
+                    </div>
+
+                    <button class="primary-btn run-btn" id="generate-plan-btn">
+                        <span>Formulate Action Plan</span>
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- VIEW 2: PIPELINE PROCESSING VIEW -->
+            <section id="pipeline-view" class="view-panel">
+                <div class="pipeline-header">
+                    <h2>Analyzing Goal & Coordinating Agents</h2>
+                    <p>Sankalp AI is running your parameters through a pipeline of specialized agents...</p>
+                </div>
+
+                <div class="pipeline-flow-container">
+                    <!-- Agent Cards Grid -->
+                    <div class="agents-progress-grid">
+                        <div class="agent-progress-card" id="agent-card-research">
+                            <div class="agent-glow-bg"></div>
+                            <div class="agent-header-info">
+                                <div class="agent-avatar"><i data-lucide="search"></i></div>
+                                <div class="agent-name-role">
+                                    <h3>Research Agent</h3>
+                                    <span>Market & Knowledge Audit</span>
+                                </div>
+                            </div>
+                            <div class="agent-status-row">
+                                <span class="agent-status-label">Idle</span>
+                                <div class="mini-spinner"></div>
+                            </div>
+                            <div class="agent-progress-bar-container">
+                                <div class="agent-progress-bar"></div>
+                            </div>
+                        </div>
+
+                        <div class="agent-progress-card" id="agent-card-verification">
+                            <div class="agent-glow-bg"></div>
+                            <div class="agent-header-info">
+                                <div class="agent-avatar"><i data-lucide="shield-check"></i></div>
+                                <div class="agent-name-role">
+                                    <h3>Verification Agent</h3>
+                                    <span>Risk Assessment & Feasibility</span>
+                                </div>
+                            </div>
+                            <div class="agent-status-row">
+                                <span class="agent-status-label">Idle</span>
+                                <div class="mini-spinner"></div>
+                            </div>
+                            <div class="agent-progress-bar-container">
+                                <div class="agent-progress-bar"></div>
+                            </div>
+                        </div>
+
+                        <div class="agent-progress-card" id="agent-card-strategy">
+                            <div class="agent-glow-bg"></div>
+                            <div class="agent-header-info">
+                                <div class="agent-avatar"><i data-lucide="compass"></i></div>
+                                <div class="agent-name-role">
+                                    <h3>Strategy Agent</h3>
+                                    <span>Strategic Synthesis & SWOT</span>
+                                </div>
+                            </div>
+                            <div class="agent-status-row">
+                                <span class="agent-status-label">Idle</span>
+                                <div class="mini-spinner"></div>
+                            </div>
+                            <div class="agent-progress-bar-container">
+                                <div class="agent-progress-bar"></div>
+                            </div>
+                        </div>
+
+                        <div class="agent-progress-card" id="agent-card-execution">
+                            <div class="agent-glow-bg"></div>
+                            <div class="agent-header-info">
+                                <div class="agent-avatar"><i data-lucide="check-square"></i></div>
+                                <div class="agent-name-role">
+                                    <h3>Execution Plan Agent</h3>
+                                    <span>Action Roadmap & Timeline</span>
+                                </div>
+                            </div>
+                            <div class="agent-status-row">
+                                <span class="agent-status-label">Idle</span>
+                                <div class="mini-spinner"></div>
+                            </div>
+                            <div class="agent-progress-bar-container">
+                                <div class="agent-progress-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Terminal Output -->
+                    <div class="console-terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-buttons">
+                                <span class="t-btn red"></span>
+                                <span class="t-btn yellow"></span>
+                                <span class="t-btn green"></span>
+                            </div>
+                            <div class="terminal-title">sankalp-agent-pipeline.log</div>
+                            <div class="terminal-engine-badge">Engine: v1.0.0</div>
+                        </div>
+                        <div class="terminal-body" id="terminal-output">
+                            <!-- Terminal logs inserted dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 3: WORKSPACE DASHBOARD -->
+            <section id="workspace-view" class="view-panel">
+                <div class="workspace-layout">
+                    <!-- Left Sidebar Panel -->
+                    <aside class="workspace-sidebar">
+                        <div class="goal-summary-card">
+                            <div class="card-glow"></div>
+                            <span class="card-badge">Active Project</span>
+                            <h3 id="sidebar-goal-title">My Goal Plan</h3>
+                            <div class="sidebar-meta">
+                                <div class="meta-item" id="sidebar-meta-time-item">
+                                    <i data-lucide="clock"></i>
+                                    <span>Timeframe: <strong id="sidebar-meta-time">3 Months</strong></span>
+                                </div>
+                                <div class="meta-item" id="sidebar-meta-budget-item">
+                                    <i data-lucide="dollar-sign"></i>
+                                    <span>Budget: <strong id="sidebar-meta-budget">Low</strong></span>
+                                </div>
+                                <div class="meta-item" id="sidebar-meta-experience-item">
+                                    <i data-lucide="award"></i>
+                                    <span>Experience: <strong id="sidebar-meta-experience">Beginner</strong></span>
+                                </div>
+                                <div class="meta-item">
+                                    <i data-lucide="activity"></i>
+                                    <span>Confidence: <strong id="sidebar-confidence-badge">High</strong></span>
+                                </div>
+                                <div class="meta-item">
+                                    <i data-lucide="database"></i>
+                                    <span>RAG Source: <strong id="sidebar-rag-badge">Inactive</strong></span>
+                                </div>
+                            </div>
+                            <div class="workspace-progress-box">
+                                <div class="progress-labels">
+                                    <span>Implementation Readiness</span>
+                                    <span id="progress-percentage-val">85%</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-fill" id="sidebar-progress-fill" style="width: 85%;"></div>
+                                </div>
+                            </div>
+                            <button class="secondary-btn plan-new-btn" id="plan-new-goal-btn">
+                                <i data-lucide="rotate-ccw"></i>
+                                <span>Plan New Goal</span>
+                            </button>
+                        </div>
+
+                        <!-- Workspace Agent Cards status -->
+                        <div class="workspace-agents-list">
+                            <h4>Specialist Outputs</h4>
+                            <div class="mini-agent-item active" data-target-tab="tab-response">
+                                <span class="agent-icon response" style="background: rgba(140, 82, 255, 0.1); color: var(--accent-purple); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px;"><i data-lucide="sparkles"></i></span>
+                                <div class="agent-meta">
+                                    <h5>AI Assistant Handoff</h5>
+                                    <span>Response generated</span>
+                                </div>
+                                <i data-lucide="chevron-right" class="arrow"></i>
+                            </div>
+                            <div class="mini-agent-item" data-target-tab="tab-research">
+                                <span class="agent-icon research"><i data-lucide="search"></i></span>
+                                <div class="agent-meta">
+                                    <h5>Research findings</h5>
+                                    <span>100% verified</span>
+                                </div>
+                                <i data-lucide="chevron-right" class="arrow"></i>
+                            </div>
+                            <div class="mini-agent-item" data-target-tab="tab-verification">
+                                <span class="agent-icon verification"><i data-lucide="shield-check"></i></span>
+                                <div class="agent-meta">
+                                    <h5>Risk Assessment</h5>
+                                    <span>Credibility Score: <strong id="sidebar-credibility-score">90%</strong></span>
+                                </div>
+                                <i data-lucide="chevron-right" class="arrow"></i>
+                            </div>
+                            <div class="mini-agent-item" data-target-tab="tab-strategy">
+                                <span class="agent-icon strategy"><i data-lucide="compass"></i></span>
+                                <div class="agent-meta">
+                                    <h5>Strategic Canvas</h5>
+                                    <span>SWOT & Phasing complete</span>
+                                </div>
+                                <i data-lucide="chevron-right" class="arrow"></i>
+                            </div>
+                            <div class="mini-agent-item" data-target-tab="tab-execution">
+                                <span class="agent-icon execution"><i data-lucide="check-square"></i></span>
+                                <div class="agent-meta">
+                                    <h5>Roadmap & Kanban</h5>
+                                    <span>Interactive Gantt generated</span>
+                                </div>
+                                <i data-lucide="chevron-right" class="arrow"></i>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Right Workspace Panels -->
+                    <div class="workspace-main-panel">
+                        <!-- Final AI Assistant Response Card -->
+                        <div class="glass-card final-ai-response-card" id="final-ai-response-card" style="padding: 24px; margin-bottom: 24px; border-left: 4px solid var(--accent-purple); animation: fadeIn 0.4s ease-out; display: none;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                <i data-lucide="sparkles" style="color: var(--accent-purple); width: 18px; height: 18px;"></i>
+                                <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0; font-family: Outfit, sans-serif;">Final AI Strategic Response Summary</h2>
+                            </div>
+                            <div class="ai-response-content" id="ai-response-text" style="line-height: 1.6; font-size: 0.95rem; color: var(--text-primary); max-height: 250px; overflow-y: auto;">
+                                <!-- Dynamic response content -->
+                            </div>
+                        </div>
+
+                        <!-- Navigation Tabs -->
+                        <nav class="workspace-tabs">
+                            <button class="tab-btn active" data-tab="tab-research">
+                                <i data-lucide="search"></i>
+                                <span>Research Hub</span>
+                            </button>
+                            <button class="tab-btn" data-tab="tab-verification">
+                                <i data-lucide="shield-check"></i>
+                                <span>Verification & Risks</span>
+                            </button>
+                            <button class="tab-btn" data-tab="tab-strategy">
+                                <i data-lucide="compass"></i>
+                                <span>Strategy Canvas</span>
+                            </button>
+                            <button class="tab-btn" data-tab="tab-execution">
+                                <i data-lucide="check-square"></i>
+                                <span>Execution Roadmap</span>
+                            </button>
+                        </nav>
+
+                        <!-- Tab Contents -->
+                        <div class="tab-viewport">
+                            
+                            <!-- TAB 1: RESEARCH HUB -->
+                            <div class="tab-content active" id="tab-research">
+                                <div class="tab-header-description">
+                                    <h2>Market & Knowledge Synthesis</h2>
+                                    <p>Assembled by the Research Agent. This dashboard contains secondary research, targeted user persona data, and alternative analysis to orient your project.</p>
+                                </div>
+                                
+                                <div class="research-grid">
+                                    <!-- Market Insights -->
+                                    <div class="glass-card research-card-wide">
+                                        <h3>Core Findings & Industry Landscapes</h3>
+                                        <div class="insights-list" id="research-insights-container">
+                                            <!-- Dynamic insights -->
+                                        </div>
+                                    </div>
+
+                                    <!-- User Personas -->
+                                    <div class="glass-card">
+                                        <h3>Target Audience Profile</h3>
+                                        <div class="persona-box" id="research-persona-container">
+                                            <!-- Dynamic persona -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Alternative Landscape Matrix -->
+                                    <div class="glass-card research-card-wide">
+                                        <h3>Competitor / Alternative Analysis</h3>
+                                        <div class="table-responsive">
+                                            <table class="competitor-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Alternative / Option</th>
+                                                        <th>Strength</th>
+                                                        <th>Weakness / Limitation</th>
+                                                        <th>Sankalp Advantage</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="research-competitor-body">
+                                                    <!-- Dynamic competitors -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 2: VERIFICATION & AUDIT -->
+                            <div class="tab-content" id="tab-verification">
+                                <div class="tab-header-description">
+                                    <h2>Risk Audit & Credibility Dashboard</h2>
+                                    <p>Compiled by the Verification Agent. We checked critical assumptions, estimated risk severity, and laid down direct counter-actions to bulletproof your strategy.</p>
+                                </div>
+
+                                <div class="verification-stats">
+                                    <div class="glass-card stat-metric">
+                                        <span class="label">Feasibility Grade</span>
+                                        <span class="value" id="verification-grade">A</span>
+                                    </div>
+                                    <div class="glass-card stat-metric">
+                                        <span class="label">Assumptions Checked</span>
+                                        <span class="value" id="verification-assumptions-count">6</span>
+                                    </div>
+                                    <div class="glass-card stat-metric">
+                                        <span class="label">Total Risk Factors</span>
+                                        <span class="value" id="verification-risks-count">4</span>
+                                    </div>
+                                </div>
+
+                                <div class="verification-grid">
+                                    <!-- Checked Assumptions -->
+                                    <div class="glass-card">
+                                        <h3>Assumptions & Validation Status</h3>
+                                        <div class="assumptions-list" id="verification-assumptions-list">
+                                            <!-- Dynamic list -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Actionable Risk Matrix -->
+                                    <div class="glass-card risk-matrix-card">
+                                        <h3>Detailed Risk Registry & Mitigations</h3>
+                                        <div class="risk-registry" id="verification-risk-registry">
+                                            <!-- Dynamic risk items -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 3: STRATEGY CANVAS -->
+                            <div class="tab-content" id="tab-strategy">
+                                <div class="tab-header-description">
+                                    <h2>Strategic Alignment Map</h2>
+                                    <p>Crafted by the Strategy Agent. Bridges raw research with execution checkpoints. Double-click or click edit to customize the strategic boards.</p>
+                                </div>
+
+                                <div class="strategy-layout">
+                                    <!-- Interactive SWOT Grid -->
+                                    <div class="swot-container">
+                                        <h3 class="swot-title">Interactive SWOT Analysis</h3>
+                                        <div class="swot-grid">
+                                            <div class="swot-quadrant strengths">
+                                                <div class="quadrant-header">
+                                                    <h4>Strengths</h4>
+                                                    <button class="add-note-btn" data-quadrant="strengths" title="Add strength"><i data-lucide="plus"></i></button>
+                                                </div>
+                                                <ul class="swot-notes-list" id="swot-strengths"></ul>
+                                            </div>
+                                            <div class="swot-quadrant weaknesses">
+                                                <div class="quadrant-header">
+                                                    <h4>Weaknesses</h4>
+                                                    <button class="add-note-btn" data-quadrant="weaknesses" title="Add weakness"><i data-lucide="plus"></i></button>
+                                                </div>
+                                                <ul class="swot-notes-list" id="swot-weaknesses"></ul>
+                                            </div>
+                                            <div class="swot-quadrant opportunities">
+                                                <div class="quadrant-header">
+                                                    <h4>Opportunities</h4>
+                                                    <button class="add-note-btn" data-quadrant="opportunities" title="Add opportunity"><i data-lucide="plus"></i></button>
+                                                </div>
+                                                <ul class="swot-notes-list" id="swot-opportunities"></ul>
+                                            </div>
+                                            <div class="swot-quadrant threats">
+                                                <div class="quadrant-header">
+                                                    <h4>Threats</h4>
+                                                    <button class="add-note-btn" data-quadrant="threats" title="Add threat"><i data-lucide="plus"></i></button>
+                                                </div>
+                                                <ul class="swot-notes-list" id="swot-threats"></ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Positioning Map & Phasing -->
+                                    <div class="strategy-flex-row">
+                                        <div class="glass-card flexible-card">
+                                            <h3>Strategic Phasing</h3>
+                                            <div class="phases-timeline" id="strategy-phases-container">
+                                                <!-- Dynamic timeline phase nodes -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 4: EXECUTION ROADMAP -->
+                            <div class="tab-content" id="tab-execution">
+                                <div class="tab-header-description">
+                                    <h2>Operational Roadmap</h2>
+                                    <p>Structured by the Execution Plan Agent. Manage task stages in Kanban, review milestones in Gantt visualizer, and export your completed blueprint.</p>
+                                </div>
+
+                                <div class="execution-actions">
+                                    <div class="roadmap-toggle-buttons">
+                                        <button class="toggle-btn active" id="btn-show-gantt">
+                                            <i data-lucide="calendar"></i>
+                                            <span>Timeline (Gantt)</span>
+                                        </button>
+                                        <button class="toggle-btn" id="btn-show-kanban">
+                                            <i data-lucide="kanban"></i>
+                                            <span>Kanban Board</span>
+                                        </button>
+                                    </div>
+                                    <div class="export-dropdown-wrapper">
+                                        <button class="primary-btn export-btn" id="export-dropdown-btn">
+                                            <i data-lucide="download"></i>
+                                            <span>Export Actions</span>
+                                            <i data-lucide="chevron-down"></i>
+                                        </button>
+                                        <div class="export-dropdown-menu" id="export-menu">
+                                            <button id="export-md-btn"><i data-lucide="file-text"></i> Export Markdown</button>
+                                            <button id="export-json-btn"><i data-lucide="file-json"></i> Export JSON</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- GANTT TIMELINE DISPLAY -->
+                                <div class="execution-display-section active" id="gantt-section">
+                                    <div class="glass-card gantt-card">
+                                        <div class="gantt-header-row">
+                                            <div class="gantt-col-task-name">Phase / Task</div>
+                                            <div class="gantt-timeline-dates" id="gantt-headers">
+                                                <!-- Dynamic month headers -->
+                                            </div>
+                                        </div>
+                                        <div class="gantt-rows-container" id="gantt-rows">
+                                            <!-- Dynamic gantt rows -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- KANBAN BOARD DISPLAY -->
+                                <div class="execution-display-section" id="kanban-section">
+                                    <div class="kanban-board">
+                                        <div class="kanban-column" id="kanban-todo">
+                                            <div class="column-header">
+                                                <h4>To Do</h4>
+                                                <span class="count-badge" id="count-todo">0</span>
+                                            </div>
+                                            <div class="kanban-cards-list" id="kanban-list-todo">
+                                                <!-- Dynamic tasks -->
+                                            </div>
+                                        </div>
+                                        <div class="kanban-column" id="kanban-inprogress">
+                                            <div class="column-header">
+                                                <h4>In Progress</h4>
+                                                <span class="count-badge" id="count-inprogress">0</span>
+                                            </div>
+                                            <div class="kanban-cards-list" id="kanban-list-inprogress">
+                                                <!-- Dynamic tasks -->
+                                            </div>
+                                        </div>
+                                        <div class="kanban-column" id="kanban-done">
+                                            <div class="column-header">
+                                                <h4>Done</h4>
+                                                <span class="count-badge" id="count-done">0</span>
+                                            </div>
+                                            <div class="kanban-cards-list" id="kanban-list-done">
+                                                <!-- Dynamic tasks -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>System Configurations</h2>
+                <button class="close-btn" id="close-settings-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field-group">
+                    <label>Planner Execution Mode</label>
+                    <div class="radio-toggle-group">
+                        <label class="radio-toggle-label active" id="mode-simulated-label">
+                            <input type="radio" name="planner-mode" id="mode-simulated" value="simulated" checked>
+                            <span>Simulated Blueprint</span>
+                        </label>
+                        <label class="radio-toggle-label" id="mode-api-label">
+                            <input type="radio" name="planner-mode" id="mode-api" value="api">
+                            <span>Live Gemini API</span>
+                        </label>
+                    </div>
+                    <p class="field-desc">Simulated Mode utilizes custom static expert templates for instant high-fidelity plans. Live API connects directly to Gemini for open-ended goals.</p>
+                </div>
+
+                <div class="modal-field-group" id="api-key-group" style="display: none;">
+                    <label for="gemini-api-key">Google Gemini API Key</label>
+                    <div class="input-with-button">
+                        <input type="password" id="gemini-api-key" placeholder="AIzaSy...">
+                        <button class="secondary-btn" id="toggle-key-visibility"><i data-lucide="eye"></i></button>
+                    </div>
+                    <p class="field-desc">Stored safely in your browser's local storage. Never leaves your machine. Grab a free key from <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.</p>
+                </div>
+
+                <div class="modal-field-group" id="model-select-group" style="display: none;">
+                    <label for="gemini-model-select">Gemini Model Model</label>
+                    <select id="gemini-model-select">
+                        <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (Fast, Recommended)</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Deep Strategy)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary-btn" id="cancel-settings-btn">Cancel</button>
+                <button class="primary-btn" id="save-settings-btn">Save Configurations</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Scripts -->
+    <script src="js/services/mockData.js"></script>
+    <script src="js/services/geminiService.js"></script>
+    <script src="js/agents/researchAgent.js"></script>
+    <script src="js/agents/verificationAgent.js"></script>
+    <script src="js/agents/strategyAgent.js"></script>
+    <script src="js/agents/executionAgent.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
