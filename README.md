@@ -21,27 +21,29 @@ Sankalp AI is a multi-agent AI planning platform that transforms user goals into
 ---
 
 ## 🧠 AI Workflow
+
+```
 User Goal
-   │ 
-   ▼
+     │
+     ▼
 Planner Agent
-   │
-   ▼
+     │
+     ▼
 Research Agent
-   │
-   ▼
+     │
+     ▼
 Verification Agent
-   │
-   ▼
+     │
+     ▼
 Strategy Agent
-   │
-   ▼
+     │
+     ▼
 Execution Agent
-   │
-   ▼
+     │
+     ▼
 Final AI Strategic Response
 
----
+```
 
 ## 📂 Project Modules
 
