@@ -126,9 +126,8 @@ Open `index.html` in your browser or run a local server.
 - Simulated Multi-Agent Mode
 - No paid API required
 - Runs completely locally
-
 ---
-🔮 Future Enhancements
+
 ## 🔮 Future Enhancements
 
 - Live AI API integration
@@ -143,7 +142,7 @@ Open `index.html` in your browser or run a local server.
 
 **Srishti Dubey**
 
-BCA Student | AI & Cybersecurity Enthusiast
+BCA Student 
 
 ---
 
