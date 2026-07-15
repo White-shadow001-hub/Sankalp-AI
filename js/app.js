@@ -9,7 +9,6 @@ const { generateWithGemini } = window;
 const { ResearchAgent, VerificationAgent, StrategyAgent, ExecutionAgent } = window;
 
 // --- Global Application State ---
-// --- Global Application State ---
 const state = {
     apiKey: localStorage.getItem('sankalp_gemini_api_key') || '',
     plannerMode: localStorage.getItem('sankalp_planner_mode') || 'simulated',
@@ -621,14 +620,13 @@ function classifyAndRenderParameters(goalText) {
         return;
     }
     
-    const text = goalText.toLowerCase();
+    const domain = window.classifyGoalDomain(goalText);
     let category = 'general';
-    
-    if (text.includes('startup') || text.includes('business') || text.includes('company') || text.includes('launch') || text.includes('market') || text.includes('sales') || text.includes('revenue') || text.includes('product')) {
+    if (domain === 'business_physical' || domain === 'business_digital') {
         category = 'business';
-    } else if (text.includes('code') || text.includes('python') || text.includes('program') || text.includes('app') || text.includes('website') || text.includes('database') || text.includes('software') || text.includes('api') || text.includes('technical') || text.includes('dev')) {
+    } else if (domain === 'technical') {
         category = 'technical';
-    } else if (text.includes('paper') || text.includes('write') || text.includes('research') || text.includes('academic') || text.includes('ethics') || text.includes('study') || text.includes('thesis') || text.includes('citation')) {
+    } else if (domain === 'academic') {
         category = 'academic';
     }
     
@@ -955,19 +953,46 @@ async function startPlannerPipeline() {
             // Simulated local mode
             printConsoleLog("Sankalp System: Loading simulation engine...", "system");
             
-            // Generate procedurally customized plan matching the dynamic category parameters
-            compiledPlanData = generateProceduralMock(state.currentGoal, {
-                timeframe: timeframeVal,
-                budget: budgetVal || focusVal,
-                experience: experienceVal,
-                focus: focusVal || scopeVal,
-                category: state.detectedCategory,
-                confidence: state.confidence,
-                ragActive: state.ragActive,
-                attachmentCount: state.attachedFiles.length + state.attachedUrls.length,
-                attachedFiles: state.attachedFiles,
-                attachedUrls: state.attachedUrls
-            });
+            // Check if this is a known preset goal — use curated MOCK_GOALS data
+            const presetData = MOCK_GOALS && MOCK_GOALS[state.currentGoal];
+            if (presetData && !state.ragActive) {
+                printConsoleLog("Sankalp System: Preset blueprint detected. Loading curated agent dataset...", "info");
+                compiledPlanData = {
+                    timeframe: presetData.timeframe || timeframeVal,
+                    budget: presetData.budget || budgetVal || "low budget",
+                    experience: presetData.experience || experienceVal || "beginner",
+                    focus: presetData.focus || focusVal || "speed",
+                    category: state.detectedCategory || "general",
+                    confidence: state.confidence || "High",
+                    ragActive: false,
+                    attachmentCount: 0,
+                    attachedFiles: [],
+                    attachedUrls: [],
+                    // Pre-load curated agent outputs so agents skip regeneration
+                    research: presetData.research || null,
+                    verification: presetData.verification || null,
+                    strategy: presetData.strategy || null,
+                    execution: presetData.execution || null
+                };
+            } else {
+                // Dynamic goal — Initialize minimal shell. Agents will build the planData sequentially.
+                compiledPlanData = {
+                    timeframe: timeframeVal,
+                    budget: budgetVal || focusVal || "low budget",
+                    experience: experienceVal || "beginner",
+                    focus: focusVal || scopeVal || "speed",
+                    category: state.detectedCategory || "general",
+                    confidence: state.confidence || "High",
+                    ragActive: state.ragActive,
+                    attachmentCount: state.attachedFiles.length + state.attachedUrls.length,
+                    attachedFiles: state.attachedFiles,
+                    attachedUrls: state.attachedUrls,
+                    research: null,
+                    verification: null,
+                    strategy: null,
+                    execution: null
+                };
+            }
             
             // Artificial delay to simulate processing when offline
             await new Promise(resolve => setTimeout(resolve, 800));
@@ -975,6 +1000,37 @@ async function startPlannerPipeline() {
 
         // Run visual agents sequencer on the fetched payload
         await executeAgentsSequentially(compiledPlanData);
+
+        // Compile dynamic assistantResponse
+        if (!compiledPlanData.assistantResponse) {
+            let resText = `## Dynamic Action Blueprint Evaluation\n\n`;
+            resText += `Successfully compiled the strategic action plan for your goal: **"${state.currentGoal}"** based on the collaborative multi-agent execution pipeline.\n\n`;
+            
+            if (state.ragActive && state.attachedFiles.length > 0) {
+                resText += `### Attached File Analysis\n`;
+                state.attachedFiles.forEach(file => {
+                    const textSnippet = file.content.length > 150 ? file.content.substring(0, 150) + "..." : file.content;
+                    resText += `- **${file.name}** (Size: ${(file.size / 1024).toFixed(1)} KB)\n  *Extracted Content:* "${textSnippet}"\n`;
+                });
+                resText += `\n`;
+            }
+            if (state.ragActive && state.attachedUrls.length > 0) {
+                resText += `### Referenced URL Metadata\n`;
+                state.attachedUrls.forEach(urlObj => {
+                    resText += `- **${urlObj.name}** (${urlObj.url})\n  *Analyzed context:* "${urlObj.content}"\n`;
+                });
+                resText += `\n`;
+            }
+            
+            resText += `### Executive Action Summary\n`;
+            resText += `- **Category Focus:** ${compiledPlanData.category.toUpperCase()}\n`;
+            resText += `- **Target Timeframe:** ${compiledPlanData.timeframe}\n`;
+            resText += `- **Assessed Confidence:** **${compiledPlanData.confidence}**\n\n`;
+            resText += `The agent team verified **${compiledPlanData.verification.assumptions.length} key assumptions** and registered **${compiledPlanData.verification.risks.length} potential risk vectors**. Based on the SWOT matrix, we formulated a **3-phase roadmap** consisting of **${compiledPlanData.execution.tasks.length} strategic milestones**.\n\n`;
+            resText += `*Click through the Research, Verification, Strategy, and Execution tabs to explore the detailed dashboards, Gantt charts, and Kanban boards.*`;
+            
+            compiledPlanData.assistantResponse = resText;
+        }
 
         // Save active data
         state.activePlanData = compiledPlanData;
@@ -1154,7 +1210,26 @@ function parseMarkdownToHTML(markdownText) {
 // --- RENDER RESEARCH HUB ---
 function renderResearchTab() {
     const res = state.activePlanData.research;
+    const domain = window.classifyGoalDomain(state.currentGoal);
     
+    // Dynamically rename competitor table headers depending on the domain
+    const ths = document.querySelectorAll('.competitor-table th');
+    if (ths.length >= 4) {
+        if (domain === 'educational') {
+            ths[0].textContent = 'Learning Method / Option';
+            ths[2].textContent = 'Limitations / Downsides';
+            ths[3].textContent = 'Your Advantage';
+        } else if (domain === 'academic') {
+            ths[0].textContent = 'Alternative Format / Option';
+            ths[2].textContent = 'Limitations / Downsides';
+            ths[3].textContent = 'Your Advantage';
+        } else {
+            ths[0].textContent = 'Alternative / Option';
+            ths[2].textContent = 'Weakness / Limitation';
+            ths[3].textContent = 'Sankalp Advantage';
+        }
+    }
+
     // 1. Insights
     DOM.researchInsightsContainer.innerHTML = res.insights.map((ins, idx) => `
         <div class="insight-item">
@@ -1172,7 +1247,7 @@ function renderResearchTab() {
             <div class="persona-avatar">${res.persona.name.charAt(0)}</div>
             <div class="persona-meta">
                 <h4>${res.persona.name}</h4>
-                <span>${res.persona.role} (Age ${res.persona.age})</span>
+                <span>${res.persona.role} | ${res.persona.age.toString().includes('Not specified') ? res.persona.age : `Age ${res.persona.age}`}</span>
             </div>
         </div>
         <div class="persona-details">
@@ -1227,7 +1302,46 @@ function renderVerificationTab() {
 // --- RENDER STRATEGY TAB ---
 function renderStrategyTab() {
     const strat = state.activePlanData.strategy;
+    const domain = window.classifyGoalDomain(state.currentGoal);
     
+    // Dynamically rename SWOT headers depending on the goal's domain
+    const swotTitleEl = document.querySelector('.swot-title');
+    const strengthsH4 = document.querySelector('.swot-quadrant.strengths .quadrant-header h4');
+    const weaknessesH4 = document.querySelector('.swot-quadrant.weaknesses .quadrant-header h4');
+    const opportunitiesH4 = document.querySelector('.swot-quadrant.opportunities .quadrant-header h4');
+    const threatsH4 = document.querySelector('.swot-quadrant.threats .quadrant-header h4');
+    const strategyTabBtnSpan = document.querySelector('.tab-btn[data-tab="tab-strategy"] span');
+
+    if (domain === 'educational') {
+        if (swotTitleEl) swotTitleEl.textContent = 'Study & Retention Framework';
+        if (strengthsH4) strengthsH4.textContent = 'Enablers / Strengths';
+        if (weaknessesH4) weaknessesH4.textContent = 'Challenges / Gaps';
+        if (opportunitiesH4) opportunitiesH4.textContent = 'Applications / Practice';
+        if (threatsH4) threatsH4.textContent = 'Distractions / Risks';
+        if (strategyTabBtnSpan) strategyTabBtnSpan.textContent = 'Learning Strategy';
+    } else if (domain === 'academic') {
+        if (swotTitleEl) swotTitleEl.textContent = 'Academic Research Framework';
+        if (strengthsH4) strengthsH4.textContent = 'Core Hypotheses';
+        if (weaknessesH4) weaknessesH4.textContent = 'Methodology Limitations';
+        if (opportunitiesH4) opportunitiesH4.textContent = 'Publication Venues';
+        if (threatsH4) threatsH4.textContent = 'Desk Rejection Factors';
+        if (strategyTabBtnSpan) strategyTabBtnSpan.textContent = 'Research Strategy';
+    } else if (domain === 'general_personal') {
+        if (swotTitleEl) swotTitleEl.textContent = 'Resource & Dependency Map';
+        if (strengthsH4) strengthsH4.textContent = 'Resource Enablers';
+        if (weaknessesH4) weaknessesH4.textContent = 'Material Constraints';
+        if (opportunitiesH4) opportunitiesH4.textContent = 'Growth Ideas';
+        if (threatsH4) threatsH4.textContent = 'Scheduling Obstacles';
+        if (strategyTabBtnSpan) strategyTabBtnSpan.textContent = 'Project Strategy';
+    } else {
+        if (swotTitleEl) swotTitleEl.textContent = 'Interactive SWOT Analysis';
+        if (strengthsH4) strengthsH4.textContent = 'Strengths';
+        if (weaknessesH4) weaknessesH4.textContent = 'Weaknesses';
+        if (opportunitiesH4) opportunitiesH4.textContent = 'Opportunities';
+        if (threatsH4) threatsH4.textContent = 'Threats';
+        if (strategyTabBtnSpan) strategyTabBtnSpan.textContent = 'Strategy Canvas';
+    }
+
     // Renders SWOT Quadrants
     const renderQuadrant = (container, list, quadrantKey) => {
         container.innerHTML = list.map((note, idx) => `
@@ -1385,7 +1499,7 @@ function compileMarkdownBlueprint() {
     
     md += `### Target User Profile\n`;
     md += `- **Name:** ${plan.research.persona.name}\n`;
-    md += `- **Role:** ${plan.research.persona.role} (Age ${plan.research.persona.age})\n`;
+    md += `- **Role:** ${plan.research.persona.role} | ${plan.research.persona.age.toString().includes('Not specified') ? plan.research.persona.age : `Age ${plan.research.persona.age}`}\n`;
     md += `- **Core Goal:** ${plan.research.persona.goals}\n`;
     md += `- **Pain Point:** ${plan.research.persona.frustrations}\n`;
     md += `> "${plan.research.persona.quote}"\n\n`;

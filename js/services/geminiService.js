@@ -14,6 +14,11 @@ window.generateWithGemini = async function(userGoal, parameters, apiKey, modelNa
     const systemPrompt = `You are a team of expert AI agents working together (Research Agent, Verification Agent, Strategy Agent, and Execution Agent). 
 Your task is to take a user's Goal/Intent and build a comprehensive, high-fidelity, verified, and practical strategic action plan.
 
+CRITICAL INSTRUCTIONS:
+1. DO NOT analyze, mention, or reference "Sankalp AI", "Sankalp", or this multi-agent planning platform itself in your output (such as in competitor analysis, persona, or insights), unless the user's goal specifically asks about it. The plan must focus 100% on the user's goal.
+2. In the competitor table, for the "advantage" field, describe the advantage of the user's proposed plan/strategy (e.g. "Your plan leverages...", "Your strategy avoids...") rather than referencing the planning tool.
+3. Every field, insight, risk, and task must be highly specific, dynamic, and context-aware based on the user's goal and any uploaded context. Avoid generic templates.
+
 The output must be returned strictly in JSON format matching the schema below. Do not output any markdown formatting before/after the JSON except the JSON itself.
 
 JSON SCHEMA TO RETURN:
@@ -32,7 +37,7 @@ JSON SCHEMA TO RETURN:
       "quote": "string (Direct quote reflecting their mindset)"
     },
     "competitors": [
-      { "name": "string (Alternative solution)", "strength": "string", "weakness": "string", "advantage": "string (Why user's plan wins)" }
+      { "name": "string (Alternative solution)", "strength": "string", "weakness": "string", "advantage": "string (Why user's plan wins over this alternative)" }
     ]
   },
   "verification": {
@@ -135,6 +140,21 @@ function validateAndCleanPlan(plan, goal, params) {
     if (!plan.verification) plan.verification = { grade: "B", assumptions: [], risks: [] };
     if (!plan.strategy) plan.strategy = { swot: { strengths: [], weaknesses: [], opportunities: [], threats: [] }, phases: [] };
     if (!plan.execution) plan.execution = { tasks: [] };
+
+    if (!plan.assistantResponse) {
+        plan.assistantResponse = `## Dynamic Action Blueprint Evaluation
+
+Successfully compiled the strategic action plan for your goal: **"${goal}"** based on the live collaborative multi-agent execution pipeline.
+
+### Executive Action Summary
+- **Category Focus:** ${(plan.category || params.category || "General").toUpperCase()}
+- **Target Timeframe:** ${plan.timeframe || params.timeframe || "3 months"}
+- **Assessed Confidence:** **${plan.confidence}**
+
+The agent team verified **${plan.verification.assumptions.length} key assumptions** and registered **${plan.verification.risks.length} potential risk vectors**. We formulated a **3-phase roadmap** consisting of **${plan.execution.tasks.length} strategic milestones**.
+
+*Click through the Research, Verification, Strategy, and Execution tabs to explore the detailed dashboards, Gantt charts, and Kanban boards.*`;
+    }
 
     // Fill defaults for persona
     if (!plan.research.persona.name) {
