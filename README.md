@@ -112,7 +112,7 @@ Final AI Strategic Response
 ## 🚀 Running Locally
 
 ```bash
-git clone [https://github.com/White-shadow001-hub/Sankalp-AI.git](https://github.com/White-shadow001-hub/Sankalp-AI.git)
+git clone [https://github.com/0xSrishti/Sankalp-AI](https://github.com/0xSrishti/Sankalp-AI)
 
 cd Sankalp-AI
 ```
